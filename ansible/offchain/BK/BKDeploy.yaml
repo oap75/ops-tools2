@@ -1,0 +1,24 @@
+---
+# Make Backup Infra Ready For Disaster Recovery
+
+- name: Make BK Infra Ready
+  hosts: BkDeploy
+  gather_facts: true
+  remote_user: root
+  become: true
+  roles:
+    - BkDeploy
+  tags:
+    - BK
+
+- name: Gather System Information
+  hosts: BkDeploy
+  gather_facts: true
+  remote_user: root
+  become: true
+  roles:
+    - Docker
+    - Info
+  tags:
+    - info
+    - BK

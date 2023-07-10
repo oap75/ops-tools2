@@ -1,0 +1,7 @@
+# Run the Subsocial parachain node
+- hosts: collator
+  remote_user: ops
+  roles:
+    - role: collator
+  tags:
+    - collator

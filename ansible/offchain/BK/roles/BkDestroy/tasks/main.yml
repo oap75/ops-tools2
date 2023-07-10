@@ -1,0 +1,23 @@
+---
+- name: Get Docker Version
+  command: docker version
+  register: docker_version_output
+
+- name: Get Docker-Compose Version
+  command: docker compose version
+  register: docker_compose_version_output
+
+- name: Display Docker & Docker compose Information
+  debug:
+    msg: |
+      Docker Version Info:
+        {{ docker_version_output.stdout }}
+
+      Docker Compose Info:
+        {{ docker_compose_version_output.stdout }}
+
+- name: Remove the whole infra
+  shell: docker compose -f /root/backup-infra/docker-compose.yml --profile downtime down -v
+
+- name: Remove backup docker network
+  shell: docker network rm backup

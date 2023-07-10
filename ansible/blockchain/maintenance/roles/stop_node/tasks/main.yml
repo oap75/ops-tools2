@@ -1,0 +1,18 @@
+---
+- name: Get Docker containers
+  command:
+    cmd: docker ps --format "{{ '{{' }} .Names {{ '}}' }}"
+  register: docker_containers
+
+- name: Filter Blockchain Docker containers
+  set_fact:
+    filtered_containers: "{{ docker_containers.stdout_lines | select('match', '^subsocial-.*') | list }}"
+  changed_when: false
+
+- name: Print filtered containers
+  debug:
+    var: filtered_containers
+
+- name: Stop Blockchain Docker containers
+  shell: docker stop "{{ item }}"
+  loop: "{{ filtered_containers }}"

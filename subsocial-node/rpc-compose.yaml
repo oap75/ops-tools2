@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+
+  node-rpc:
+    image: dappforce/subsocial-node:latest
+    container_name: subsocial-node-rpc
+    user:
+      subsocial:subsocial
+    restart: on-failure
+    command: subsocial-node
+      --name subsocial-rpc
+      --base-path /data
+      --chain df
+      --node-key-file=/data/node-key
+      --wasm-execution Compiled
+      --rpc-cors https://app.subsocial.network,https://sub.id,https://polkaverse.com,https://polkadot.js.org
+      --ws-port 9944
+      --port 9933
+      --rpc-port 30333
+      --ws-external
+      --rpc-external
+      --rpc-methods Safe
+      --no-prometheus
+    volumes:
+      - ./data:/data
+    ports:
+      - "9944:9944"
+      - "9933:9933"
+      - "30333:30333"
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.3
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16

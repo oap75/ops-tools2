@@ -1,0 +1,7 @@
+---
+namespace: monitoring
+
+resources:
+  - endpoints.yaml
+  - service-monitor.yaml
+  - service.yaml

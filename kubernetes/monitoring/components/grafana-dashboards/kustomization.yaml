@@ -1,0 +1,44 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: fluentbit
+    files:
+      - fluentbit.json
+  - name: loki-dev-logs
+    files:
+      - loki-dev-logs.json
+  - name: loki-metrics
+    files:
+      - loki-metrics.json
+  - name: blackbox
+    files:
+      - blackbox.json
+  - name: cadvisor-exporter
+    files:
+      - cadvisor-exporter.json
+  - name: elasticsearch
+    files:
+      - elasticsearch.json
+  - name: ipfs
+    files:
+      - ipfs.json
+  - name: node-exporter
+    files:
+      - node-exporter.json
+  - name: nginx-ingress
+    files:
+      - nginx-ingress.json
+  - name: substrate
+    files:
+      - substrate.json
+  - name: argocd
+    files:
+      - argocd.json
+
+generatorOptions:
+ disableNameSuffixHash: true
+ labels:
+   app: kube-prometheus-stack-grafana
+   grafana_dashboard: "1"

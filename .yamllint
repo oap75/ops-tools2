@@ -1,0 +1,13 @@
+---
+extends: default
+
+rules:
+  line-length: disable
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+    ignore: |
+      kubernetes/monitoring/components/
+      kubernetes/ipfs/base/configmap.yaml
+      kubernetes/ipfs/base/statefulset.yaml

@@ -1,0 +1,6 @@
+---
+
+- name: Update the collator node
+  command: sh /home/ops/collator.sh
+  become: true
+  become_user: ops

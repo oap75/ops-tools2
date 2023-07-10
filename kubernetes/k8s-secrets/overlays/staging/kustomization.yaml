@@ -1,0 +1,26 @@
+---
+bases:
+  - ../../base
+
+resources:
+  - argocd/argocd-initial-admin-secret.yaml
+  - argocd/github-subsocial-repo-creds.yaml
+  - botkube/botkube-secret.yaml
+  - monitoring/discord-secret.yaml
+  - monitoring/grafana-creds.yaml
+  - monitoring/subsocial-ssl.yaml
+  - post-ever/dockerhub.yaml
+  - post-ever/subsocial-ssl.yaml
+  - sub-back/moderation-secret.yaml
+  - sub-back/dockerhub.yaml
+  - sub-back/sendpuls-secret.yaml
+  - sub-back/signer-secret.yaml
+  - sub-back/spacers-ssl.yaml
+  - sub-back/sub-backend-secret.yaml
+  - sub-back/subsocial-ssl.yaml
+  - sub-back/grillchat.yaml
+  - sub-back/grill-notifications-secret.yaml
+  - sub-id/dockerhub.yaml
+  - sub-id/subid-ssl.yaml
+  - sub-id/subsocial-ssl.yaml
+  - redis/redis-secret.yaml

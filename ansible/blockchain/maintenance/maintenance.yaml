@@ -1,0 +1,40 @@
+---
+# Maintenance the Subsocial blockchain nodes
+
+- name: Playbook to stop blockchain docker container
+  hosts: maintenance
+  remote_user: root
+  become: true
+  roles:
+    - stop_node
+  tags:
+    - maintenance
+
+- name: Playbook to update Ubuntu server
+  hosts: maintenance
+  remote_user: root
+  become: true
+  roles:
+    - update_server
+  tags:
+    - maintenance
+
+- name: Playbook to start blockchain node
+  hosts: maintenance
+  remote_user: root
+  become: true
+  vars:
+    node_type: "{{ node_type }}"
+  roles:
+    - start_node
+  tags:
+    - maintenance
+
+- name: Playbook to update monitoring services
+  hosts: maintenance
+  remote_user: root
+  become: true
+  roles:
+    - update_monitoring_services
+  tags:
+    - maintenance

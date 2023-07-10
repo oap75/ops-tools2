@@ -1,0 +1,56 @@
+name: Change subdomains IP
+on:
+  workflow_dispatch:
+    inputs:
+      current-ip:
+        description: 'Choose the current ip 89 (backup), 178 (main)'
+        required: true
+        type: choice
+        options:
+          - "178.128.136.169"
+          - "89.58.35.137"
+      new-ip:
+        description: 'Choose the new ip 89 (backup), 178( main)'
+        required: true
+        type: choice
+        options:
+          - "178.128.136.169"
+          - "89.58.35.137"
+env:
+  new_ip: ${{ github.event.inputs.new-ip }}
+  current_ip: ${{ github.event.inputs.current-ip }}
+
+jobs:
+  Subsocial-domains:
+    name: Subsocial domains
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+ 
+      - name: Change subsocial.network CF A-records IP
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE/scripts/cf-gitops/
+          cf_zone=${{ secrets.SUBSOCIAL_CF_ZONE }} cf_mail=${{ secrets.SUBSOCIAL_CF_MAIL }} cf_token=${{ secrets.SUBSOCIAL_CF_TOKEN }} changer.sh subsocial.network.txt
+
+      - name: Change post4ever.app CF A-record IP
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE/scripts/cf-gitops/
+          cf_zone=${{ secrets.POST_CF_ZONE }} cf_mail=${{ secrets.POST_CF_MAIL }} cf_token=${{ secrets.POST_CF_TOKEN }} bash changer.sh post4ever.app.txt
+
+      - name: Change polkaverse.com CF A-record IP
+        run: |
+          cd $GITHUB_WORKSPACE/scripts/cf-gitops/
+          cf_zone=${{ secrets.POLKAVERSE_CF_ZONE }} cf_mail=${{ secrets.POLKAVERSE_CF_MAIL }} cf_token=${{ secrets.POLKAVERSE_CF_TOKEN }} bash changer.sh polkaverse.com.txt
+
+      - name: Change spacers.app CF A-record IP
+        run: |
+          cd $GITHUB_WORKSPACE/scripts/cf-gitops/
+          cf_zone=${{ secrets.SPACERS_CF_ZONE }} cf_mail=${{ secrets.SPACERS_CF_MAIL }} cf_token=${{ secrets.SPACERS_CF_TOKEN }} bash changer.sh spacers.app.txt
+
+      - name: Change sub.id CF A-record IP
+        run: |
+          cd $GITHUB_WORKSPACE/scripts/cf-gitops/
+          cf_zone=${{ secrets.SUBID_CF_ZONE }} cf_mail=${{ secrets.SUBID_CF_MAIL }} cf_token=${{ secrets.SUBID_CF_TOKEN }} bash changer.sh sub.id.txt

@@ -1,0 +1,25 @@
+---
+- name: Get Docker Version
+  command: docker version --format "{{ '{{' }} .Server.Version {{ '}}' }}"
+  register: docker_version_output
+
+- name: Get Docker-Compose Version
+  command: docker-compose version --short
+  register: docker_compose_version_output
+
+- name: List all Docker Containers
+  command: docker ps -a --format "{{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}\t{{ '{{' }}.State{{ '}}' }}"
+  register: docker_ps_output
+
+- name: Split Docker Container Lists
+  set_fact:
+    exited_containers: "{{ docker_ps_output.stdout_lines | select('match', '^.*\t.*\texited.*$') | map('regex_replace', '\\t', ' - ') | list }}"
+    running_containers: "{{ docker_ps_output.stdout_lines | select('match', '^.*\t.*\trunning.*$') | map('regex_replace', '\\t', ' - ') | list }}"
+
+- name: Docker Stats Command
+  command: docker stats --no-stream --format "table {{ '{{' }}.Name{{ '}}' }}\t{{ '{{' }}.CPUPerc{{ '}}' }}\t{{ '{{' }}.MemUsage{{ '}}' }}"
+  register: docker_stats_output
+
+- name: Sort Docker Stats Output
+  set_fact:
+    sorted_stats_output: "{{ docker_stats_output.stdout_lines[1:] | sort }}"

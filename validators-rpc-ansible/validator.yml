@@ -1,0 +1,7 @@
+# Run the Subsocial validator
+- hosts: validator
+  remote_user: ops
+  roles:
+    - role: validator
+  tags:
+    - validator

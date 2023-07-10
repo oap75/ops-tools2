@@ -1,0 +1,8 @@
+---
+namespace: monitoring
+
+# make sure namespace exists
+resources:
+  - namespace.yaml
+  - discord-deployment.yaml
+  - discord-service.yaml

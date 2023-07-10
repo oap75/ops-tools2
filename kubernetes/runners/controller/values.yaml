@@ -1,0 +1,8 @@
+---
+replicaCount: 2
+
+nameOverride: "arc"
+fullnameOverride: "arc"
+
+flags:
+  logLevel: "info"

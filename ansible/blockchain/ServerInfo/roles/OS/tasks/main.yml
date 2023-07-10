@@ -1,0 +1,39 @@
+---
+- name: Execute lscpu command
+  command: lscpu
+  register: cpu_info
+
+- name: Execute free command
+  command: free -h
+  register: memory_info
+
+- name: Set Memory Values
+  set_fact:
+    memory_total: "{{ memory_values[0] }}"
+    memory_used: "{{ memory_values[1] }}"
+    memory_free: "{{ memory_values[2] }}"
+    memory_shared: "{{ memory_values[3] }}"
+    memory_buff_cache: "{{ memory_values[4] }}"
+    memory_available: "{{ memory_values[5] }}"
+
+- name: Get Disk Information
+  command: df -h /
+  register: disk_info
+
+- name: Set Disk Values
+  set_fact:
+    disk_filesystem: "{{ disk_values[0] }}"
+    disk_size: "{{ disk_values[1] }}"
+    disk_used: "{{ disk_values[2] }}"
+    disk_avail: "{{ disk_values[3] }}"
+    disk_use_perc: "{{ disk_values[4] }}"
+    disk_mount: "{{ disk_values[5] }}"
+
+- name: Get Uptime
+  command: uptime -p
+  register: uptime_info
+
+- name: Execute lastlog command
+  command: lastlog --user=root
+  register: last_ssh_login
+  changed_when: false

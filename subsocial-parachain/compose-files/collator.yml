@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+
+  subsocial-collator:
+    image: dappforce/subsocial-parachain:latest
+    container_name: subsocial-collator
+    user:
+      subsocial:subsocial
+    restart: on-failure
+    command: subsocial-collator
+        --port 40333
+        --rpc-port 8833
+        --rpc-methods=unsafe
+        --rpc-cors=localhost
+        --base-path=/data
+        --node-key-file=/data/node_key
+        --collator
+        --force-authoring
+        --name=subsocial-collator
+        --execution=wasm
+        --
+        --chain=kusama
+        --execution=wasm
+        --wasm-execution=Compiled
+        --port 30333
+
+    volumes:
+      - ../data:/data
+    ports:
+      - "40333:40333"
+
+    networks:
+      - nodes_network
+
+networks:
+  nodes_network:
+    external:
+      name: nodes_network        

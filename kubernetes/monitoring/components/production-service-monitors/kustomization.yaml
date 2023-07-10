@@ -1,0 +1,34 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+namespace: monitoring
+
+resources:
+  - argo/service-monitor.yaml
+  - nginx/service-monitor.yaml
+  - loki/service-monitor.yaml
+  - elastic/
+  - ipfs/
+  - caadvisor-exporters/archive-node/
+  - caadvisor-exporters/bk/
+  - caadvisor-exporters/collator1/
+  - caadvisor-exporters/collator2/
+  - caadvisor-exporters/elastic/
+  - caadvisor-exporters/rpc1/
+  - caadvisor-exporters/rpc2/
+  - caadvisor-exporters/rpc3/
+  - node-exporters/archive-node/
+  - node-exporters/bk/
+  - node-exporters/collator1/
+  - node-exporters/collator2/
+  - node-exporters/elastic/
+  - node-exporters/rpc1/
+  - node-exporters/rpc2/
+  - node-exporters/rpc3/
+  - main-net/archive-rpc/
+  - main-net/collator1/
+  - main-net/collator2/
+  - main-net/rpc1/
+  - main-net/rpc2/
+  - main-net/rpc3/

@@ -1,0 +1,12 @@
+---
+- name: Stop the corresponding monitoring services
+  command: docker-compose -f /root/parachain/compose-files/monitoring.yml down
+  become: yes
+
+- name: Pull latest monitoring docker images
+  command: docker-compose -f /root/parachain/compose-files/monitoring.yml pull
+  become: yes
+
+- name: Rerun and update the monitoring services
+  command: docker-compose -f /root/parachain/compose-files/monitoring.yml up -d
+  become: yes

@@ -1,0 +1,16 @@
+---
+namespace: nginx
+
+images:
+  - name: nginx
+    newName: nginx
+    newTag: stable-alpine
+
+labels:
+  - includeSelectors: true
+    pairs:
+      app: nginx-sub-id
+
+resources:
+  - files/
+  - daemonset.yaml

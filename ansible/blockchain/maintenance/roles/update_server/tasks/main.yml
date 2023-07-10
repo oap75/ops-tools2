@@ -1,0 +1,20 @@
+---
+- name: Update Ubuntu server
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade Ubuntu packages
+  apt:
+    upgrade: yes
+    force_apt_get: yes
+
+- name: Reboot system
+  reboot:
+    reboot_timeout: 300
+    post_reboot_delay: 60
+    test_command: uptime
+  async: 0
+  poll: 0
+  retries: 3
+  delay: 10

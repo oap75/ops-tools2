@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: head-less-ipfs-cluster
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  ports:
+    - name: swarm
+      port: 4001
+      protocol: TCP
+      targetPort: swarm
+    - name: swarm-udp
+      port: 4002
+      protocol: TCP
+      targetPort: swarm-udp
+    - name: api
+      port: 5001
+      protocol: TCP
+      targetPort: api
+    - name: ws
+      port: 8081
+      protocol: TCP
+      targetPort: ws
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+    - name: api-http
+      port: 9094
+      protocol: TCP
+      targetPort: api-http
+    - name: proxy-http
+      port: 9095
+      protocol: TCP
+      targetPort: proxy-http
+    - name: cluster-swarm
+      port: 9096
+      protocol: TCP
+      targetPort: cluster-swarm
+  sessionAffinity: None
+  type: ClusterIP

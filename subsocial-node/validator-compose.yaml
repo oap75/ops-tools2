@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+
+  node-validator:
+    image: dappforce/subsocial-node:latest
+    container_name: subsocial-validator
+    user:
+      subsocial:subsocial
+    restart: on-failure
+    command: subsocial-node
+      --name subsocial-validator
+      --base-path /data
+      --chain df
+      --node-key-file=/data/node-key
+      --wasm-execution Compiled
+      --db-cache 2048
+      --validator
+      --port 30333
+      --rpc-port 9933
+      --rpc-methods safe
+    volumes:
+      - ./data:/data
+    ports:
+      - "30333:30333"
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.2
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16

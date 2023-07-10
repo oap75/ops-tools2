@@ -1,0 +1,112 @@
+---
+- name: Display Server Information
+  register: server_info
+  debug:
+    msg: |
+      CPU Information:
+      +-------------------+------------------------------------+
+      |    Parameter      |      Value                         |
+      +-------------------+------------------------------------+
+      | Total CPU Cores   |         {{ total_cores }}
+      | CPU Architecture  |         {{ cpu_arch }}
+      +-------------------+------------------------------------+
+
+      Memory Information:
+      +-------------------+------------------------------------+
+      |    Parameter      |                      Value         |
+      +-------------------+------------------------------------+
+      |      total        |         {{ memory_total }}
+      |      used         |         {{ memory_used }}
+      |      free         |         {{ memory_free }}
+      |      shared       |         {{ memory_shared }}
+      |   buff/cache      |         {{ memory_buff_cache }}
+      |    available      |         {{ memory_available }}
+      +-------------------+------------------------------------+
+
+      Disk Information:
+      +-------------------+-----------------------------------------+
+      |    Parameter      |                  Value                  |
+      +-------------------+-----------------------------------------+
+      |    Filesystem     |         {{ disk_filesystem }}
+      |    size           |         {{ disk_size }}
+      |    used           |         {{ disk_used }}
+      |    avail          |         {{ disk_avail }}
+      |    use%           |         {{ disk_use_perc }}
+      |    mount          |         {{ disk_mount }}
+      +-------------------+-----------------------------------------+
+
+      Uptime:
+      +-------------------+---------------------------------------------------------------------------------+
+      |    Parameter      |                     Value                                                       |
+      +-------------------+---------------------------------------------------------------------------------+
+      |    Uptime         |         {{ uptime }}
+      +-------------------+---------------------------------------------------------------------------------+
+
+      Last SSH Login:
+      +-------------------+---------------------------------------------------------------------------------+
+      |    Parameter      |                    Value                                                        |
+      +-------------------+---------------------------------------------------------------------------------+
+      |       From        |         {{ last_ssh_from }}
+      |      Latest       |         {{ last_ssh_latest }}
+      +-------------------+---------------------------------------------------------------------------------+
+
+      Docker Version:
+      +-------------------+
+      |   Version         |
+      +-------------------+
+      {% for version in docker_version_output.stdout_lines %}
+      |   {{ version }}          |
+      {% endfor %}
+      +-------------------+
+
+      Docker-Compose Version:
+      +-------------------+
+      |   Version         |
+      +-------------------+
+      {% for version in docker_compose_version_output.stdout_lines %}
+      |   {{ version }}          |
+      {% endfor %}
+      +-------------------+
+
+      Exited Containers:
+      +-------------------+-----------------------------------+
+      |    Container      |       Image                       |
+      +-------------------+-----------------------------------+
+      {% for container in exited_containers %}
+      |   {{ container.split(' - ')[0] }}          {{ container.split(' - ')[1] }}
+      {% endfor %}
+      +-------------------+----------------------+-------------+
+
+      Running Containers:
+      +-------------------+----------------------+-------------+
+      |    Container      |       Image                        |
+      +-------------------+----------------------+-------------+
+      {% for container in running_containers %}
+      |   {{ container.split(' - ')[0].strip() }}          {{ container.split(' - ')[1].strip() }}
+      {% endfor %}
+      +-------------------+----------------------+-------------+
+
+      Sorted Docker Stats Output:
+      +-------------------+--------+-------------------+
+      |    Container      | CPU(%) |    Memory Usage   |
+      +-------------------+--------+-------------------+
+      {% for item in sorted_stats_output %}
+      |     {{ item.split('\t') | join(' | ') }}
+      {% endfor %}
+      +-------------------+--------+-------------------+
+
+- name: Save System Information to File
+  copy:
+    content: "{{ server_info.msg }}"
+    dest: /tmp/info.txt
+
+- name: Fetch file.txt from remote server
+  fetch:
+    src: /tmp/info.txt
+    dest: roles/Info/files/info.txt
+    flat: yes
+
+- name: Remove file from remote server
+  file:
+    path: /tmp/info.txt
+    state: absent

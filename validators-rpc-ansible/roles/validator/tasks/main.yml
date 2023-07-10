@@ -1,0 +1,5 @@
+---
+- name: Run the Subsocial validator
+  command: sh /home/ops/validator.sh
+  become: true
+  become_user: ops

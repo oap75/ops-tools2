@@ -1,0 +1,289 @@
+version: "3.9"
+
+x-envs:
+  &envs
+  SUBSOCIAL_RPC_URL: wss://para.subsocial.network
+  IPFS_NODE_URL: https://ipfs.subsocial.network
+  XSOCIAL_RPC_URL: wss://xsocial.subsocial.network
+  API_NO_ADMIN_PROTECTION_STR: "false"
+  IPFS_ADMIN_NODE_URL: https://gw.crustfiles.app/
+
+x-config:
+  &config
+  networks:
+    - backup
+  restart: always
+  pull_policy: always
+
+services:
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    expose:
+      - 6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data
+    <<: *config
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+       - "443:443"
+       - "80:80"
+    configs:
+      - source: nginx_subid_config
+        target: /etc/nginx/conf.d/subid.conf
+      - source: nginx_grill_config
+        target: /etc/nginx/conf.d/grill.conf
+      - source: nginx_config
+        target: /etc/nginx/conf.d/subsocial.conf
+    secrets:
+      - source: polkaverse-ca
+        target: /root/ssl/polkaverse/ca.crt
+      - source: polkaverse-key
+        target: /root/ssl/polkaverse/ssl.key
+      - source: subid-ca
+        target: /root/ssl/subid/ca.crt
+      - source: subid-key
+        target: /root/ssl/subid/ssl.key
+      - source: post4ever-ca
+        target: /root/ssl/post4ever/ca.crt
+      - source: post4ever-key
+        target: /root/ssl/post4ever/ssl.key
+      - source: spacers-ca
+        target: /root/ssl/spacers/ca.crt
+      - source: spacers-key
+        target: /root/ssl/spacers/ssl.key
+      - source: grill-ca
+        target: /root/ssl/grill/ca.crt
+      - source: grill-key
+        target: /root/ssl/grill/ssl.key
+      - source: gazer-ca
+        target: /root/ssl/gazer/ca.crt
+      - source: gazer-key
+        target: /root/ssl/gazer/ssl.key
+      - source: subsocial-ca
+        target: /root/ssl/subsocial/ca.crt
+      - source: subsocial-key
+        target: /root/ssl/subsocial/ssl.key
+    <<: *config
+
+  subid-back:
+    image: docker.io/dappforce/subid-backend:main-latest
+    container_name: subid-back
+    expose:
+      - "3001"
+    <<: *config
+
+  subid-front:
+    image: docker.io/dappforce/subid-frontend:main-latest
+    container_name: subid-front
+    expose:
+      - "3003"
+    <<: *config
+
+  webapp:
+    image: dappforce/subsocial-web-app:master-latest
+    container_name: webapp
+    expose:
+      - "3003"
+    <<: *config
+
+  spacers:
+    image: docker.io/dappforce/subsocial-web-app:vs-spacers-page-latest
+    container_name: spacers
+    expose:
+      - "3003"
+    <<: *config
+
+  playground:
+    image: docker.io/dappforce/subsocial-playground:latest
+    container_name: playground
+    expose:
+      - "3000"
+    <<: *config
+
+  post-ever:
+    image: docker.io/dappforce/subsocial-web-app:postever-master-latest
+    container_name: post-ever
+    expose:
+      - "3000"
+    <<: *config
+
+  para-doc:
+    image: docker.io/dappforce/parachain-docs:master-latest
+    container_name: para-doc
+    expose:
+      - "80"
+    <<: *config
+
+  doc:
+    image: docker.io/dappforce/subsocial-js-doc:master-latest
+    container_name: doc
+    expose:
+      - "80"
+    <<: *config
+
+  xsocial-cms:
+    image: docker.io/dappforce/subsocial-web-app:xsocial-cms-latest
+    container_name: xsocial-cms
+    expose:
+      - "3003"
+    <<: *config
+
+  grill-chat:
+    image: docker.io/dappforce/subsocial-web-app:grillchat-master-latest
+    container_name: grill-chat
+    expose:
+      - "3000"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+    <<: *config
+
+  sendulse:
+    image: docker.io/dappforce/subsocial-sendpulse:main-latest
+    container_name: sendpulse
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: "3000"
+      BUYERS_BOOK_ID: "770381"
+      INELIGIBLE_BOOK_ID: "770382"
+      <<: *envs
+    env_file:
+      - ./secrets/sendpulse.env
+    expose:
+      - "3000"
+    <<: *config
+
+  signer:
+    image: docker.io/dappforce/subsocial-signer:main-latest
+    container_name: signer
+    expose:
+      - "3000"
+    environment:
+      <<: *envs
+    env_file:
+      - ./secrets/signer.env
+    <<: *config
+
+  offchain:
+    image: docker.io/dappforce/subsocial-offchain:master-latest
+    container_name: offchain
+    expose:
+      - "3001"
+      - "3011"
+    environment:
+        CORS_ALLOWED_ORIGIN: '*'
+        EMAIL_PASSWORD: ""
+        EMAIL_PORT: "465"
+        EMAIL_USER: ""
+        FAUCET_DRIP_AMOUNT: "0.05"
+        FAUCET_MAX_AMOUNT_TOP_UP: "0.025"
+        FAUCET_MNEMONIC: ""
+        IPFS_GATEWAY_URL: https://ipfs.io
+        IPFS_MAX_FILE_SIZE_BYTES: "2097152"
+        KUSAMA_NODE_URL: wss://kusama-rpc.polkadot.io
+        LOG_LEVEL: info
+        MAX_RESULTS_LIMIT: "20"
+        OFFCHAIN_REQ_TIMEOUT_SECS: "5"
+        OFFCHAIN_SERVER_PORT: "3001"
+        OFFCHAIN_TELEGRAM_WS_PORT: "3020"
+        OFFCHAIN_WS_PORT: "3011"
+        PG_MAX_POOL_SIZE: "100"
+        PG_SSL: "false"
+        SUBSTRATE_EVENT_METHODS: SpaceCreated,SpaceUpdated,SpaceFollowed,SpaceUnfollowed,AccountFollowed,AccountUnfollowed,PostCreated,PostUpdated,PostShared,CommentCreated,CommentUpdated,PostReactionCreated,CommentReactionCreated,ProfileCreated
+        SUBSTRATE_EVENT_SECTIONS: permissions,posts,profileFollows,profiles,reactions,scores,spaceFollows,spaceOwnership,spaces,utils
+        SUBSTRATE_URL: wss://para.f3joule.space
+        TEST_MODE: "false"
+    env_file:
+      - ./secrets/offchain.env
+    <<: *config
+
+  moderation:
+    image: docker.io/dappforce/subsocial-moderation:main-latest
+    container_name: moderation
+    profiles:
+      - downtime
+    environment:
+      MOD_BOT_PORT: "3000"
+      TG_NO_ADMIN_PROTECTION_STR: "false"
+      <<: *envs
+    env_file:
+      - ./secrets/moderation.env
+    expose:
+      - "3000"
+    <<: *config
+
+  grill-notif:
+    image: docker.io/dappforce/subsocial-grill-notifications:main-latest
+    container_name: grill-notif
+    profiles:
+      - downtime
+    environment:
+      BOT_PORT: "3000"
+      DATA_PROVIDER_SQUID_HTTPS_URL: https://squid.subsquid.io/xsocial/graphql
+      DATA_PROVIDER_SQUID_WS_URL: wss://squid.subsquid.io/xsocial-wss/graphql
+      TELEGRAM_BOT_GRILL_REDIRECTION_HREF: https://grill.chat
+      TELEGRAM_TEMPORARY_LINKING_ID_EXPIRATION_TIME_MINS_STR: "10"
+      <<: *envs
+    env_file:
+      - ./secrets/grill-notif.env
+    expose:
+      - "3000"
+    <<: *config
+
+networks:
+  backup:
+    external: true
+    name: backup
+
+volumes:
+  redis-data: {}
+
+configs:
+  nginx_subid_config:
+    file: ./nginx/conf/subid.conf
+  nginx_grill_config:
+    file: ./nginx/conf/grill.conf
+  nginx_config:
+    file: ./nginx/conf/subsocial.conf
+
+secrets:
+  polkaverse-ca:
+    file: ./nginx/ssl/polkaverse/ca.crt
+  polkaverse-key:
+    file: ./nginx/ssl/polkaverse/ssl.key
+  subid-ca:
+    file: ./nginx/ssl/subid/ca.crt
+  subid-key:
+    file: ./nginx/ssl/subid/ssl.key
+  post4ever-ca:
+    file: ./nginx/ssl/post4ever/ca.crt
+  post4ever-key:
+    file: ./nginx/ssl/post4ever/ssl.key
+  spacers-ca:
+    file: ./nginx/ssl/spacers/ca.crt
+  spacers-key:
+    file: ./nginx/ssl/spacers/ssl.key
+  grill-ca:
+    file: ./nginx/ssl/grill/ca.crt
+  grill-key:
+    file: ./nginx/ssl/grill/ssl.key
+  gazer-ca:
+    file: ./nginx/ssl/gazer/ca.crt
+  gazer-key:
+    file: ./nginx/ssl/gazer/ssl.key
+  subsocial-ca:
+    file: ./nginx/ssl/subsocial/ca.crt
+  subsocial-key:
+    file: ./nginx/ssl/subsocial/ssl.key

@@ -1,0 +1,16 @@
+---
+- op: add
+  path: /spec/volumeClaimTemplates
+  value:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: loki
+        namespace: monitoring
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: do-block-storage
+        resources:
+          requests:
+            storage: 40Gi

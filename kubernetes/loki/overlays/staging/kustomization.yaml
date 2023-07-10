@@ -1,0 +1,24 @@
+---
+bases:
+  - ../../base
+
+patches:
+  - target:
+      kind: StatefulSet
+      group: apps
+      version: v1
+      name: loki
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/volumeMounts
+        value:
+          - mountPath: /etc/loki
+            name: config
+          - mountPath: /data
+            name: loki
+  - target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: loki
+    path: statefulset.yaml

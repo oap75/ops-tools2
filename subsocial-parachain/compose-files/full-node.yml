@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+
+  subsocial-full-node:
+    image: dappforce/subsocial-parachain:latest
+    container_name: subsocial-full-node
+    user:
+      subsocial:subsocial
+    restart: on-failure
+    command: subsocial-collator
+        --port=40333
+        --ws-port=8844
+        --ws-external
+        --rpc-port=8833
+        --rpc-external
+        --rpc-methods=unsafe
+        --rpc-cors="https://polkadot.js.org"
+        --base-path=/data
+        --node-key-file=/data/node_key
+        --name=subsocial-full-node
+        --execution=wasm
+        $IS_ARCHIVE
+        --
+        --chain=kusama
+        --execution=wasm
+        --wasm-execution=Compiled
+        --port 30333
+
+    volumes:
+      - ../data:/data
+    ports:
+      - "40334:40333"
+      - "127.0.0.1:8844:8844"
+      - "127.0.0.1:8833:8833"
+
+    networks:
+      - nodes_network
+
+networks:
+  nodes_network:
+    external:
+      name: nodes_network        

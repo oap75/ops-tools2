@@ -1,0 +1,44 @@
+{
+  "builders": [
+    {
+      "type": "digitalocean",
+      "api_token": "{{user `do_token`}}",
+      "image": "{{user `base_system_image`}}",
+      "region": "{{user `region`}}",
+      "size": "{{user `size`}}",
+      "ssh_username": "root",
+      "snapshot_name": "{{user `snapshot_name`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "docker",
+      "destination": "/mnt/docker"
+    },
+
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 30",
+        "sudo apt-get update -y",
+        "sudo apt update -y",
+        "sudo apt-get upgrade -y",
+        "sudo apt upgrade -y",
+        "sudo apt install -y apt-transport-https ca-certificates curl software-properties-common",
+        "sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -",
+        "sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'",
+        "sudo apt update",
+        "sudo apt install -y docker-ce",
+        "sudo mv /mnt/docker/daemon.json /etc/docker/daemon.json",
+        "sudo systemctl enable docker",
+        "sudo systemctl restart docker",
+        "sudo apt install -y docker-compose",
+        "sudo adduser --disabled-password --gecos '' runner",
+        "sudo usermod -aG docker runner",
+        "sudo usermod -aG sudo runner",
+        "sudo echo \"runner ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers"
+      ]
+    }
+  ]
+}

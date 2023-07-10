@@ -1,0 +1,281 @@
+---
+additionalPrometheusRulesMap:
+
+  blackbox-endpoint:
+     groups:
+     - name: endpointdown
+       rules:
+       - alert: EndpointDown
+         for: 1m
+         expr: probe_success == 0
+         labels:
+           severity: "critical"
+         annotations:
+           summary: "Endpoint {{ $labels.instance }} down"
+
+  docker-rules-cadvisor:
+     groups:
+     - name: docker-containers
+       rules:
+       - alert: ContainerKilled
+         annotations:
+           message: A container has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}
+           summary: Container killed (instance {{ $labels.instance }})
+         expr: time() - container_last_seen > 300
+         for: 5m
+         labels:
+           severity: warning
+       - alert: ContainerVolumeUsage
+         expr: (1 - (sum(container_fs_inodes_free) BY (instance) / sum(container_fs_inodes_total) BY (instance))) * 100 > 80
+         for: 2m
+         labels:
+           severity: warning
+         annotations:
+           summary: Container Volume usage (instance {{ $labels.instance }})
+           message: Container Volume usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}
+
+  fullnode-node-exporter:
+     groups:
+     - name: host-node-exporter
+       rules:
+       # Please add ignored mountpoints in node_exporter parameters like
+       # "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)".
+       # Same rule using "node_filesystem_free_bytes" will fire when disk fills for non-root users.
+       - alert: HostDiskWillFillIn24Hours
+         expr: (node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs"}[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0
+         for: 2m
+         labels:
+           severity: warning
+         annotations:
+           summary: Host disk will fill in 24 hours (instance {{ $labels.instance }})
+           message: Filesystem is predicted to run out of space within the next 24 hours at current write rate\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}
+       # Please add ignored mountpoints in node_exporter parameters like
+       # "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)".
+       # Same rule using "node_filesystem_free_bytes" will fire when disk fills for non-root users.
+       - alert: HostOutOfDiskSpace
+         expr: (node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0
+         for: 2m
+         labels:
+           severity: warning
+         annotations:
+           summary: Host out of disk space (instance {{ $labels.instance }})
+           message: Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}
+
+  subsocial-custom-monitor-rules:
+     groups:
+     - name: resourceMonitoring
+       rules:
+       - alert: HostOutOfMemory
+         annotations:
+           message: Node memory is filling up (<5% left) VALUE={{ $value }} LABELS={{$labels }}
+           summary: Host out of memory (instance {{ $labels.instance }})
+         expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 3
+         for: 5m
+         labels:
+           severity: critical
+       - alert: HostOutOfMemory
+         annotations:
+           message: Node memory is filling up (<10% left) VALUE={{ $value }} LABELS={{$labels }}
+           summary: Host out of memory (instance {{ $labels.instance }})
+         expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
+         for: 5m
+         labels:
+           severity: warning
+       - alert: HostHighCpuLoad
+         expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+         for: 5m
+         labels:
+           severity: warning
+         annotations:
+           summary: Host high CPU load (instance {{ $labels.instance }})
+           description: CPU load is > 90%\n  VALUE = {{ $value }}\n  LABELS= {{ $labels }}
+       - alert: HostHighCpuLoad
+         expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+         for: 5m
+         labels:
+           severity: warning
+         annotations:
+           summary: Host high CPU load (instance {{ $labels.instance }})
+           description: CPU load is > 95%\n  VALUE = {{ $value }}\n  LABELS= {{ $labels }}
+       - alert: HostSwapIsFillingUp
+         expr: (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 97
+         for: 5m
+         labels:
+           severity: warning
+         annotations:
+           summary: Host swap is filling up (instance {{ $labels.instance }})
+           description: Swap is filling up (>97%)\n  VALUE = {{ $value }}\n  LABELS= {{ $labels }}
+
+prometheus:
+   prometheusSpec:
+      serviceMonitorSelectorNilUsesHelmValues: false
+      remoteWriteDashboards: true
+      storageSpec:
+       volumeClaimTemplate:
+         spec:
+           storageClassName: do-block-storage
+           accessModes: ["ReadWriteOnce"]
+           resources:
+             requests:
+               storage: 30Gi
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 200m
+        limits:
+          memory: 2Gi
+          cpu: "1"
+   extraScrapeConfigs: |
+      - job_name: 'node'
+        kubernetes_sd_configs:
+        - role: node
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_node_name]
+          action: replace
+          target_label: instance
+        - source_labels: [__meta_kubernetes_service_name]
+          action: replace
+          regex: (.*)
+          replacement: $1
+          target_label: service_name
+        static_configs:
+        - targets: ['node']
+
+
+prometheusOperator:
+  resources:
+        requests:
+          memory: 256Mi
+          cpu: 200m
+        limits:
+          memory: 2Gi
+          cpu: "1"
+
+grafana:
+ enabled: true
+ admin:
+   existingSecret: "grafana-creds"
+ additionalDataSources:
+   - name: Loki
+     type: loki
+     isDefault: false
+     access: proxy
+     url: http://loki:3100
+     version: 1
+ persistence:
+  type: pvc
+  enabled: true
+  storageClassName: do-block-storage
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  finalizers:
+    - kubernetes.io/pvc-protection
+ resources:
+        requests:
+          memory: 256Mi
+          cpu: 200m
+        limits:
+          memory: 2Gi
+          cpu: "1"
+
+alertmanager:
+  enabled: true
+  resources:
+    requests:
+          memory: 256Mi
+          cpu: 200m
+    limits:
+          memory: 2Gi
+          cpu: "2"
+  alertmanagerSpec:
+    logLevel: debug
+    storage:
+     volumeClaimTemplate:
+       spec:
+         storageClassName: do-block-storage
+         accessModes: ["ReadWriteOnce"]
+         resources:
+           requests:
+             storage: 1Gi
+
+  config:
+          global:
+              resolve_timeout: 5m
+          receivers:
+              - name: 'null'
+              - name: "fullnodes"
+                slack_configs:
+                - api_url: https://hooks.slack.com/services/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
+                  channel: '#fullnodes-critical-alerts'
+                  title: '{{ template "slack.subsocial.title" . }}'
+                  text: '{{ template "slack.subsocial.text" . }}'
+                  send_resolved: true
+
+              - name: "discord"
+                webhook_configs:
+                - url: 'http://alertmanager-discord:9094'
+                  send_resolved: true
+
+          route:
+              group_by:
+              - job
+              group_interval: 5m
+              group_wait: 30s
+              receiver: "discord"
+              repeat_interval: 12h
+              routes:
+
+              - match:
+                   alertname: Watchdog
+                receiver: 'null'
+
+              - match:
+                   alertname: InfoInhibitor
+                receiver: 'null'
+
+              - match_re:
+                   job: "elk.*|squid.*"
+                receiver: "discord"
+                continue: true
+
+          templates: ["*.tmpl"]
+
+  templateFiles:
+          slack_title.tmpl: |-
+                {{ define "slack.subsocial.title" }}
+                [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+                {{- if gt (len .CommonLabels) (len .GroupLabels) -}}
+                 {{" "}}(
+                 {{- with .CommonLabels.Remove .GroupLabels.Names }}
+                   {{- range $index, $label := .SortedPairs -}}
+                      {{ if $index }}, {{ end }}
+                      {{- $label.Name }}="{{ $label.Value -}}"
+                   {{- end }}
+                 {{- end -}}
+                 )
+                {{- end }}
+                {{ end }}
+          slack_text.tmpl: >-
+                {{ define "slack.subsocial.text" }}
+                {{ range .Alerts -}}
+                *Alert:* {{ .Annotations.summary }} - `{{ .Labels.severity }}`
+                *Description:* {{ .Annotations.message }} {{ .Annotations.description }}
+                *Runbook:* <{{ .Annotations.runbook }}|:spiral_note_pad:>
+                *Details:*
+                  {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+                  {{ end }}
+                {{ end -}}
+                {{ end }}
+
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: true
+
+
+kubeEtcd:
+  enabled: false

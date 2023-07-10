@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+    annotations:
+        meta.helm.sh/release-name: monitoring
+        meta.helm.sh/release-namespace: monitoring
+    name: elastic-node
+    namespace: monitoring
+    labels:
+        app: elastic-node
+        app.kubernetes.io/instance: monitoring
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: kube-prometheus-stack
+        app.kubernetes.io/version: 21.0.4
+        chart: kube-prometheus-stack-21.0.4
+        heritage: Helm
+        release: monitoring
+
+spec:
+    type: ExternalName
+    externalName: 104.248.94.114
+    clusterIP: ""
+    ports:
+    - name: metrics
+      port: 9100
+      protocol: TCP
+      targetPort: 9100

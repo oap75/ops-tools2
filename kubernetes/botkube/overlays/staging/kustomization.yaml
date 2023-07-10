@@ -1,0 +1,17 @@
+---
+bases:
+  - ../../base
+
+namespace: botkube
+
+# botkube helm chart
+helmCharts:
+  - name: botkube
+    repo: https://charts.botkube.io
+    version: v1.0.1
+    releaseName: botkube
+    namespace: botkube
+    valuesFile: values.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

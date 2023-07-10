@@ -1,0 +1,13 @@
+{
+  "kubernetes": {
+    "container_name": "container",
+    "host": "node",
+    "labels": {
+      "app": "app",
+      "release": "release"
+    },
+    "namespace_name": "namespace",
+    "pod_name": "instance"
+  },
+  "stream": "stream"
+}

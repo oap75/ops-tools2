@@ -1,0 +1,10 @@
+---
+namespace: monitoring
+
+helmCharts:
+  - name: loki-stack
+    repo: https://grafana.github.io/helm-charts
+    version: 2.1.1
+    releaseName: loki
+    namespace: monitoring
+    valuesFile: values.yaml

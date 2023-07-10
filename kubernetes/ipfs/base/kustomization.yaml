@@ -1,0 +1,15 @@
+---
+namespace: ipfs2
+
+# common labels
+commonLabels:
+  app: ipfs-cluster
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - head-less-service.yaml
+  - load-balancer-service.yaml
+  - secret.yaml
+  - serviceaccount.yaml
+  - statefulset.yaml

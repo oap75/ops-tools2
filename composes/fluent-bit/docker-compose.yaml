@@ -1,0 +1,21 @@
+version: '3'
+services:
+
+  log:
+    container_name: log
+    image: fluent/fluent-bit
+    restart: always
+    networks:
+      - staging
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - /var/log:/var/log
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./docker-metadata.lua:/fluent-bit/bin/docker-metadata.lua
+      - ./parsers.conf:/fluent-bit/etc/parsers.conf
+      - ./labelmap.json:/fluent-bit/etc/labelmap.json
+
+networks:
+  staging:
+    external:
+      name: staging

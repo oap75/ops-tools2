@@ -1,0 +1,22 @@
+---
+namespace: monitoring
+
+commonLabels:
+  app: fluent-bit-loki
+
+configMapGenerator:
+  - name: fluent-bit-loki
+    files:
+      - files/fluent-bit.conf
+      - files/labelmap.json
+      - files/parsers.conf
+
+images:
+  - name: fluent-bit-loki
+    newName: grafana/fluent-bit-plugin-loki
+    newTag: 2.1.0-amd64
+
+resources:
+  - sa.yaml
+  - permissions.yaml
+  - daemonset.yaml

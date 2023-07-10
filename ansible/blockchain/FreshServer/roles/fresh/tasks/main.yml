@@ -1,0 +1,115 @@
+---
+- name: Update Ubuntu server
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade Ubuntu packages
+  apt:
+    upgrade: yes
+    force_apt_get: yes
+
+- name: Install required system packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+      - gnupg
+      - lsb-release
+    state: latest
+    update_cache: true
+
+
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: Update apt and install docker-ce & docker-ce-cli
+  apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+    state: latest
+    update_cache: true
+
+- name: Update apt and install containerd
+  apt:
+    pkg:
+      - containerd.io
+    state: latest
+    update_cache: true
+
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+
+- name: Create docker config DIR
+  file:
+    path: /etc/docker/
+    state: directory
+
+- name: copy docker config file to remote host
+  copy:
+    src: docker/daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: Restart service docker
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: yes
+    name: docker.service
+
+- name: Enable service docker
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: yes
+
+- name: Get Docker Version
+  command: docker version
+  register: docker_version_output
+
+- name: Get Docker-Compose Version
+  command: docker compose version
+  register: docker_compose_version_output
+
+- name: Display Docker & Docker compose Information
+  debug:
+    msg: |
+      Docker Version Info:
+        {{ docker_version_output.stdout }}
+
+      Docker Compose Info:
+        {{ docker_compose_version_output.stdout }}
+
+- name: Create blockchain node config DIR
+  file:
+    path: /root/parachain/compose-files
+    state: directory
+    mode: '0777'
+    owner: root
+    group: root
+
+- name: Copying the monitoring config file
+  copy:
+    src: monitoring/monitoring.yml
+    dest: /root/parachain/compose-files
+    owner: root
+    group: root
+    mode: 0777
+
+- name: Create nodes_network docker network
+  shell: docker network create nodes_network
+
+- name: Run monitoring tools
+  shell: docker compose -f /root/parachain/compose-files/monitoring.yml up -d

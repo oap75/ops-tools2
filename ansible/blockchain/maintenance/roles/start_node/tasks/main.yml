@@ -1,0 +1,25 @@
+# tasks/main.yml
+---
+- name: Set permissions on data directory
+  file:
+    path: /root/parachain/data
+    mode: '0777'
+    recurse: yes
+
+- name: Stop the corresponding parachain full node service
+  command: docker-compose -f /root/parachain/compose-files/full-node.yml down
+  become: yes
+
+- name: Pull Latest Docker image
+  command: docker-compose -f /root/parachain/compose-files/full-node.yml pull
+  become: yes
+
+- name: Set IS_ARCHIVE environment variable based on NODE_TYPE
+  set_fact:
+    is_archive: "{{ '--pruning=archive' if node_type == 'archive' else '' }}"
+
+- name: Rerun and update the parachain full node
+  command: docker-compose -f /root/parachain/compose-files/full-node.yml up -d
+  environment:
+    IS_ARCHIVE: "{{ is_archive }}"
+  become: yes

@@ -1,0 +1,41 @@
+---
+version: '3'
+services:
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter
+    networks:
+      nodes_network:
+        ipv4_address: 172.28.1.2
+    ports:
+      - '9100:9100'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /mnt/volume_lon1_05/:/mnt/volume_lon1_05/:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|host|etc)($$|/)'
+  cadvisor:
+    image: gcr.io/google-containers/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      nodes_network:
+        ipv4_address: 172.28.1.3
+networks:
+  nodes_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16

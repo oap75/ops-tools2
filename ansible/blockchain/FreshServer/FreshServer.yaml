@@ -1,0 +1,12 @@
+---
+# Make Fresh Servers ready for blockchain nodes
+
+- name: Make Fresh Servers ready
+  hosts: FreshServer
+  gather_facts: true
+  remote_user: root
+  become: true
+  roles:
+    - fresh
+  tags:
+    - Fresh

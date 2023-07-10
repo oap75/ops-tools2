@@ -1,0 +1,77 @@
+---
+name: "Kustomize Build"
+on:
+  pull_request:
+    paths:
+      - "kubernetes/**"
+      - ".github/workflows/kustomize.yaml"
+      - ".yamllint"
+jobs:
+  yamllint:
+    name: "YAML Linter"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+      - name: "yamllint"
+        run: "yamllint --format github ./kubernetes"
+
+  kustomize:
+    name: "Kustomize"
+    runs-on: ubuntu-latest
+    needs: [yamllint]
+    strategy:
+      matrix:
+        overlay:
+          - "./kubernetes/botkube/overlays/staging"
+          - "./kubernetes/botkube/overlays/production"
+          - "./kubernetes/metrics-server/overlays/minikube"            
+          - "./kubernetes/metrics-server/overlays/staging"
+          - "./kubernetes/metrics-server/overlays/production"
+          - "./kubernetes/monitoring/overlays/staging/"
+          - "./kubernetes/monitoring/overlays/production/"
+          - "./kubernetes/nginx-ingress/overlays/staging/"
+          - "./kubernetes/nginx-ingress/overlays/production/"
+          - "./kubernetes/ipfs/overlays/staging"
+          - "./kubernetes/loki/overlays/production/"
+          - "./kubernetes/loki/overlays/staging/"
+          - "./kubernetes/fluent-bit/overlays/staging/"
+          - "./kubernetes/fluent-bit/overlays/production/"
+          - "./kubernetes/k8s-secrets/overlays/production"
+          - "./kubernetes/k8s-secrets/overlays/staging"
+          - "./kubernetes/subid-nginx/overlays/production"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+      - name: install helm
+        env:
+          HELM_VERSION: "3.9.2"
+        run: |
+          wget -q https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+          tar -xzf helm-v${HELM_VERSION}-linux-amd64.tar.gz
+          install linux-amd64/helm /usr/local/bin
+          helm version
+      - name: install kubeval
+        env:
+          KUBEVAL_VERSION: "0.16.1"
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/download/v${KUBEVAL_VERSION}/kubeval-linux-amd64.tar.gz
+          tar -xzf kubeval-linux-amd64.tar.gz
+          install kubeval /usr/local/bin
+          kubeval --version
+      - name: install kustomize
+        env:
+          KUSTOMIZE_VERSION: "4.5.6"
+        run: |
+          wget -q https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
+          tar -xzf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
+          install kustomize /usr/local/bin
+          kustomize version
+      - name: "kustomize | kubeval"
+        run: |
+          kustomize build --enable-helm ${{ matrix.overlay }}
+          kustomize build --enable-helm ${{ matrix.overlay }} | kubeval -f - \
+            --ignore-missing-schemas \
+            --kubernetes-version="1.21.5" \
+            --schema-location=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master \
+            --output=tap

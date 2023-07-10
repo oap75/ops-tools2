@@ -1,0 +1,24 @@
+---
+# Shutdown Backup Infra
+
+- name: Shutdown BK Infra
+  hosts: BkDestroy
+  gather_facts: true
+  remote_user: root
+  become: true
+  roles:
+    - BkDestroy
+  tags:
+    - BK
+
+- name: Gather System Information
+  hosts: BkDestroy
+  gather_facts: true
+  remote_user: root
+  become: true
+  roles:
+    - Docker
+    - Info
+  tags:
+    - info
+    - BK

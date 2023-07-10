@@ -1,0 +1,93 @@
+---
+name: ansible playbooks
+run-name: ${{ github.event.inputs.MODULE }} ansible playbook
+
+on:
+  workflow_dispatch:
+    inputs:
+      INFRA:
+        description: "Set infrastructure type. Options: 'blockchain' or 'offchain'"
+        required: true
+        type: choice
+        default: 'blockchain'
+        options:
+        - blockchain
+        - offchain
+      MODULE:
+        description: "Set Playbook module. Options: 'maintenance' or 'ServerInfo' or 'FreshServer' or 'BkDeploy' or 'BkDestroy'"
+        required: true
+        type: choice
+        default: 'maintenance'
+        options:
+        - maintenance
+        - ServerInfo
+        - FreshServer
+        - BkDeploy
+        - BkDestroy
+      HOST:
+        description: "Set destination host name"
+        required: true
+      NODE_TYPE:
+        description: "Set destination node type. Options: 'archive' or 'collator'"
+        required: true
+        type: choice
+        default: 'archive'
+        options:
+        - archive
+        - collator
+
+jobs:
+  blockchain-playbooks:
+    if: ${{ github.event.inputs.INFRA == 'blockchain' }}
+    runs-on: ubuntu-latest
+    name: blockchain-ansible
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run blockchain ansible playbooks
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ${{ github.event.inputs.MODULE }}.yaml
+          directory: ./ansible/blockchain/${{ github.event.inputs.MODULE }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          inventory: |
+            [${{ github.event.inputs.MODULE }}]
+            ${{ github.event.inputs.HOST }}
+          options: |
+            --inventory .hosts
+            --verbose
+            --extra-vars "node_type=${{ github.event.inputs.NODE_TYPE }}"
+
+      - name: Upload ServerInfo output to Github artifacts
+        if: ${{ github.event.inputs.MODULE == 'ServerInfo' }}
+        uses: actions/upload-artifact@v3
+        with:
+            name: ServerInfo
+            path: ./ansible/blockchain/ServerInfo/roles/Info/files/info.txt
+
+  offchain-playbooks:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.INFRA == 'offchain' }}
+    name: offchain-ansible
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run offchain ansible playbooks
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ${{ github.event.inputs.MODULE }}.yaml
+          directory: ./ansible/offchain/BK
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          inventory: |
+            [${{ github.event.inputs.MODULE }}]
+            ${{ github.event.inputs.HOST }}
+          options: |
+            --inventory .hosts
+            --verbose
+
+      - name: Upload BkInfo output to Github artifacts
+        uses: actions/upload-artifact@v3
+        with:
+            name: BkInfo
+            path: ./ansible/offchain/BK/roles/Info/files/info.txt
+

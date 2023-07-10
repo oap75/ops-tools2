@@ -1,0 +1,13 @@
+js-sdk-api.subsocial.network
+rust-api.subsocial.network
+ipfs.subsocial.network
+admin-ipfs.subsocial.network
+play.subsocial.network
+api.subsocial.network
+para.subsocial.network
+signer.subsocial.network
+post4ever.app
+polkaverse.com
+pods.spacers.app
+sub.id
+*.sub.id&content

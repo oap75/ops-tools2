@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-sub-id
+spec:
+  revisionHistoryLimit: 10
+  template:
+    spec:
+      containers:
+        - image: nginx
+          imagePullPolicy: IfNotPresent
+          name: nginx-sub-id
+          volumeMounts:
+            - name: config-files
+              mountPath: /etc/nginx/conf.d
+            - name: subid-ssl
+              mountPath: /root/ssl
+            - name: grill-ssl
+              mountPath: /root/ssl-grill
+      imagePullSecrets:
+        - name: oap
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 300
+      volumes:
+        - name: config-files
+          configMap:
+            name: nginx-config-files
+        - name: subid-ssl
+          secret:
+            secretName: subid-ssl
+        - name: grill-ssl
+          secret:
+            secretName: grill-ssl
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate

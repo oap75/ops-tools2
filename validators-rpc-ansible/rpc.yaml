@@ -1,0 +1,7 @@
+# Run the Subsocial RPC node
+- hosts: rpc
+  remote_user: ops
+  roles:
+    - role: rpc
+  tags:
+    - rpc

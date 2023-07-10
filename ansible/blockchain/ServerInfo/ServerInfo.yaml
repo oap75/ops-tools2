@@ -1,0 +1,24 @@
+---
+# Get the Server and docker info of the remote host
+
+- name: Gather System Information
+  hosts: ServerInfo
+  gather_facts: true
+  remote_user: root
+  become: true
+  roles:
+    - OS
+    - Docker
+    - Info
+  tags:
+    - info
+  vars:
+    total_cores: "{{ cpu_info.stdout_lines | select('match', '^CPU\\(s\\):\\s+\\d+$') | first | regex_replace('^CPU\\(s\\):\\s+(\\d+)', '\\1') | int }}"
+    cpu_arch: "{{ cpu_info.stdout_lines | select('match', '^Architecture:\\s+\\w+$') | first | regex_replace('^Architecture:\\s+(\\w+)', '\\1') }}"
+    memory_line: "{{ memory_info.stdout_lines | reject('search', '^Swap:') | list | select('match', '^Mem:\\s+(.*)$') | first | regex_replace('^Mem:\\s+(.*)$', '\\1') }}"
+    memory_values: "{{ memory_line.split() }}"
+    disk_line: "{{ disk_info.stdout_lines | select('match', '^/dev/') | first }}"
+    disk_values: "{{ disk_line.split() }}"
+    uptime: "{{ uptime_info.stdout }}"
+    last_ssh_from: "{{ last_ssh_login.stdout_lines[1].split()[2] }}"
+    last_ssh_latest: "{{ last_ssh_login.stdout_lines[1].split()[3:] }}"

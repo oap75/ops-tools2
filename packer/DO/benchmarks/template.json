@@ -1,0 +1,44 @@
+{
+  "builders": [
+    {
+      "type": "digitalocean",
+      "api_token": "{{user `do_token`}}",
+      "image": "{{user `base_system_image`}}",
+      "region": "{{user `region`}}",
+      "size": "{{user `size`}}",
+      "ssh_username": "root",
+      "snapshot_name": "{{user `snapshot_name`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "benchmarks",
+      "destination": "/mnt/benchmarks"
+    },
+
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 30",
+        "sudo apt-get update -y",
+	"sudo apt update -y",
+	"sudo apt-get upgrade -y",
+	"sudo apt upgrade -y",
+        "sudo apt install build-essential git clang make cmake pkg-config curl libssl-dev -y",
+	"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
+        "cat /root/.cargo/env",
+	"export PATH=$PATH:/root/.cargo/bin",
+	"cargo install sccache",
+	"mv /mnt/benchmarks/config.toml /root/.cargo/config.toml",
+	"chown root:root /root/.cargo/config.toml",
+	"git clone https://github.com/dappforce/subsocial-parachain.git",
+        "cd subsocial-parachain",
+        "git pull",
+        "sccache --start-server",
+        "./scripts/init.sh",
+        "cargo build --release --features=runtime-benchmarks"
+      ]
+    }
+  ]
+}

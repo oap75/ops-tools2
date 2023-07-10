@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: grillchat-secret
+  namespace: sub-back
+spec:
+  encryptedData:
+    REDIS_PASSWORD: AgAIcAnngZ0dseA+70hsbciEM/XiCjFo/PSWNGxk0U6+wdAMLnvRsAyHF9oL4XWnnZaM/Tba19qh0p49CNYWNmh2x0GFbPgnEgx+naDy9LCKUjtzDA2m9YTloRlJdtXD7R5rhE6vX8V6K/xymWh19DY63hLZt2zDiHVA657J1vEpFzCcwVEcZvCLUdnLHWTOupeZ/G68ul30xTjdBRw/JPJo9u3h70Qsd9Fdt0gXFTrPevusmlYY1sclQqZtbepeqjriU8keBuTzDUdE3C04eB02DHrYiMLYRSCCXLf7T28rzcNcCRZXNUnt+2Ezh/O8eEYWyk1hAzo5NH9P4HN2zYFpACsSBXuOdJ+LVTm3IWtnSc8ezwzzNviuPIatUVgk2ajfwnbt8bbl2186nzl9b50nX2PiolOWM3nU4h99zN3WvUl4s32Jbvclj5VI+SoXSvgZ7zWPIw45eLVq/V74E5IYQ/yRBi7KVa96N3dd8/yEpcbmI6VrYhIfcndKlH9Ch7+f0cYWBR7re0w41t3smVufGvjiQj8uwP77Z3wxJsacUPdVVvK6czLiqn4GRnouh1dKnxFEGxDml8r87thA7bAWvmoicx3Qtw1xEmdVxfIjOYVWSK/WCjKO4U82eUlJ1DZu5WGDNuZPu7eO+dIdQ4T4RajcekxJt/aMy614dsCOzR3epOWaKWKQR9+o0ysfaXsxAvhf+WWzIM3L3ik/mCJf
+  template:
+    metadata:
+      creationTimestamp: null
+      name: grillchat-secret
+      namespace: sub-back

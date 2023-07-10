@@ -1,0 +1,25 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  annotations:
+    meta.helm.sh/release-name: monitoring
+    meta.helm.sh/release-namespace: monitoring
+  labels:
+    app: bk-ca
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 21.0.4
+    chart: kube-prometheus-stack-21.0.4
+    heritage: Helm
+    release: monitoring
+  name: bk-ca
+  namespace: monitoring
+spec:
+  endpoints:
+  - port: metrics
+  selector:
+    matchLabels:
+      app: bk-ca
+      release: monitoring

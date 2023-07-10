@@ -1,0 +1,2 @@
+sub.id
+*.sub.id&content

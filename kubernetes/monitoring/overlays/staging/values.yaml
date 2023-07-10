@@ -1,0 +1,90 @@
+---
+restartPolicy: Always
+
+kind: Deployment
+automountServiceAccountToken: false
+pspEnabled: true
+hostNetwork: false
+strategy:
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+  type: RollingUpdate
+image:
+  repository: prom/blackbox-exporter
+  tag: v0.20.0
+  pullPolicy: IfNotPresent
+runAsUser: 1000
+runAsGroup: 1000
+readOnlyRootFilesystem: true
+runAsNonRoot: true
+allowPrivilegeEscalation: false
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+secretConfig: false
+config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+        follow_redirects: true
+        preferred_ip_protocol: "ip4"
+allowIcmp: false
+resources:
+  limits:
+    memory: 300Mi
+  requests:
+    memory: 50Mi
+serviceAccount:
+  create: true
+replicas: 1
+
+serviceMonitor:
+  enabled: true
+  defaults:
+    labels:
+      release: prometheus
+    interval: 30s
+    scrapeTimeout: 30s
+    module: http_2xx
+  scheme: http
+  tlsConfig: {}
+  bearerTokenFile:
+
+  targets:
+
+    - name: ipfs
+      url: https://staging-ipfs.subsocial.network/api/v0/version?arg=undifined
+      labels:
+        release: prometheus
+      interval: 60s
+      scrapeTimeout: 60s
+
+    - name: monitoring
+      url: https://staging-monitor.subsocial.network
+      labels:
+        release: prometheus
+      interval: 60s
+      scrapeTimeout: 60s
+
+    - name: offchain-api
+      url: https://staging-api.subsocial.network/v1/health
+      labels:
+        release: prometheus
+      interval: 60s
+      scrapeTimeout: 60s
+
+    - name: subid
+      url: https://staging.sub.id
+      labels:
+        release: prometheus
+      interval: 60s
+      scrapeTimeout: 60s

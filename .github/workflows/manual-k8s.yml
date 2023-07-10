@@ -1,0 +1,72 @@
+---
+name: Deploy all k8s apps manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      INFRA:
+        description: "Set infrastructure type. Options: 'staging' or 'production'"
+        required: true
+        type: choice
+        default: 'staging'
+        options:
+        - staging
+        - production
+      CLUSTER:
+        description: "Set destination k8s cluster name"
+        required: true
+
+jobs:
+  kustomize:
+    name: "Kustomize"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        overlay:
+          - "./kubernetes/sealed-secrets/overlays/${{ github.event.inputs.INFRA }}"
+          - "./kubernetes/k8s-secrets/overlays/${{ github.event.inputs.INFRA }}"
+          - "./kubernetes/argocd/overlays/${{ github.event.inputs.INFRA }}"
+          - "./kubernetes/applications/overlays/${{ github.event.inputs.INFRA }}"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+      - name: install helm
+        env:
+          HELM_VERSION: "3.9.2"
+        run: |
+          wget -q https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+          tar -xzf helm-v${HELM_VERSION}-linux-amd64.tar.gz
+          install linux-amd64/helm /usr/local/bin
+          helm version
+      - name: install kubeval
+        env:
+          KUBEVAL_VERSION: "0.16.1"
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/download/v${KUBEVAL_VERSION}/kubeval-linux-amd64.tar.gz
+          tar -xzf kubeval-linux-amd64.tar.gz
+          install kubeval /usr/local/bin
+          kubeval --version
+      - name: install kustomize
+        env:
+          KUSTOMIZE_VERSION: "4.5.6"
+        run: |
+          wget -q https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
+          tar -xzf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
+          install kustomize /usr/local/bin
+          kustomize version
+      - name: "kustomize | kubeval"
+        run: |
+          kustomize build --enable-helm ${{ matrix.overlay }}
+          kustomize build --enable-helm ${{ matrix.overlay }} | kubeval -f - \
+            --ignore-missing-schemas \
+            --kubernetes-version="1.21.5" \
+            --schema-location=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master \
+            --output=tap
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN_TF }}
+
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ github.event.inputs.CLUSTER }}

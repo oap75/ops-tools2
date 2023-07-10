@@ -1,0 +1,18 @@
+---
+namespace: nginx
+
+# make sure namespace exists
+resources:
+  - namespace.yaml
+
+# Ingress helm chart
+helmCharts:
+  - name: ingress-nginx
+    repo: https://kubernetes.github.io/ingress-nginx
+    version: 4.0.13
+    releaseName: nginx
+    namespace: nginx
+    valuesFile: values.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

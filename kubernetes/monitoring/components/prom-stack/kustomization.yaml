@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+namespace: monitoring
+
+helmCharts:
+  - name: kube-prometheus-stack
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 41.0.0
+    releaseName: monitoring
+    namespace: monitoring
+    valuesFile: values.yaml
+
+resources:
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-alertmanagerconfigs.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-alertmanagers.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-thanosrulers.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-podmonitors.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-probes.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-servicemonitors.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-prometheusrules.yaml
+  - https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-41.0.0/charts/kube-prometheus-stack/crds/crd-prometheuses.yaml

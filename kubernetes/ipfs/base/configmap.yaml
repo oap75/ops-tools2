@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+data:
+  bootstrap-peer-id: Qma6fgT99kGRBPaUhLwNGXg2i8NhYxq1V1CPkHGArLVYov
+kind: ConfigMap
+metadata:
+  name: env-config
+
+---
+apiVersion: v1
+data:
+  configure-ipfs.sh: |
+    #!/bin/sh
+    set -e
+    set -x
+    user=ipfs
+    mkdir -p /data/ipfs && chown -R ipfs /data/ipfs
+
+    if [ -f /data/ipfs/config ]; then
+      if [ -f /data/ipfs/repo.lock ]; then
+        rm /data/ipfs/repo.lock
+      fi
+      exit 0
+    fi
+
+    ipfs init --profile=flatfs,server
+    ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+    ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+    ipfs config --json Swarm.ConnMgr.HighWater 2000
+    ipfs config --json Datastore.BloomFilterSize 1048576
+    ipfs config Datastore.StorageMax 25GB
+
+  entrypoint.sh: |
+    #!/bin/sh
+    user=ipfs
+
+    # This is a custom entrypoint for k8s designed to connect to the bootstrap
+    # node running in the cluster. It has been set up using a configmap to allow changes on the fly.
+    mkdir -p /data/ipfs-cluster && chown -R ipfs /data/ipfs-cluster
+    if [ ! -f /data/ipfs-cluster/service.json ]; then
+    # for raft consensus use following
+    # ipfs-cluster-service init --consensus raft
+    ipfs-cluster-service init --consensus crdt
+    #--datastore leveldb
+    fi
+
+    # enable gw api(e.g ipfs-cluster-ctl) requests from outside, otherwise it only allow localhost
+    # enable cluster api(e.g http api) requests from outside, otherwise it only allow localhost
+    sed -i s~/ip4/127.0.0.1/tcp/9095~/ip4/0.0.0.0/tcp/9095~ /data/ipfs-cluster/service.json
+    sed -i s~/ip4/127.0.0.1/tcp/9094~/ip4/0.0.0.0/tcp/9094~ /data/ipfs-cluster/service.json
+
+    PEER_HOSTNAME=`cat /proc/sys/kernel/hostname`
+    ngrep -q \".*ipfs-cluster-0.*\" /proc/sys/kernel/hostname\nif [ $? -eq 0 ]; then
+    CLUSTER_ID=${BOOTSTRAP_PEER_ID} \\
+    CLUSTER_PRIVATEKEY=${BOOTSTRAP_PEER_PRIV_KEY} \\
+    exec ipfs-cluster-service daemon --upgrade
+    else
+    BOOTSTRAP_ADDR=/dns4/${SVC_NAME}/tcp/9096/ipfs/${BOOTSTRAP_PEER_ID}\n
+    \ if [ -z $BOOTSTRAP_ADDR ]; then
+    exit 1
+    fi
+    # Only ipfs user can get here  --bootstrap <peer-multiaddress1,peer-multiaddress2>
+    exec ipfs-cluster-service
+    daemon --upgrade --bootstrap $BOOTSTRAP_ADDR --leave
+    fi
+
+kind: ConfigMap
+metadata:
+  name: ipfs-cluster-set-bootstrap-conf

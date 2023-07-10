@@ -1,0 +1,6 @@
+---
+namespace: botkube
+
+# make sure namespace exists
+resources:
+  - namespace.yaml

@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+    annotations:
+        meta.helm.sh/release-name: monitoring
+        meta.helm.sh/release-namespace: monitoring
+    name: xsocial
+    namespace: monitoring
+    labels:
+        app: xsocial
+        app.kubernetes.io/instance: monitoring
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: kube-prometheus-stack
+        app.kubernetes.io/version: 21.0.4
+        chart: kube-prometheus-stack-21.0.4
+        heritage: Helm
+        release: monitoring
+
+spec:
+    type: ExternalName
+    externalName: 89.58.8.157
+    clusterIP: ""
+    ports:
+    - name: metrics
+      port: 8080
+      protocol: TCP
+      targetPort: 8080

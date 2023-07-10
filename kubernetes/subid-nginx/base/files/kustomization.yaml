@@ -1,0 +1,12 @@
+---
+configMapGenerator:
+  - name: nginx-config-files
+    files:
+      - default.conf
+      - defaultssl.conf
+      - grill.conf
+      - main.conf
+      - staging.conf
+
+generatorOptions:
+  disableNameSuffixHash: true
