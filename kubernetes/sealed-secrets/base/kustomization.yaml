@@ -1,6 +1,7 @@
 ---
 resources:
   - namespace.yaml
+  - crd.yaml
 
 # sealed-secret helm chart
 helmCharts:
