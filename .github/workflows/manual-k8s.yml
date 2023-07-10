@@ -20,13 +20,6 @@ jobs:
   kustomize:
     name: "Kustomize"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        overlay:
-          - "./kubernetes/sealed-secrets/overlays/${{ github.event.inputs.INFRA }}"
-          - "./kubernetes/k8s-secrets/overlays/${{ github.event.inputs.INFRA }}"
-          - "./kubernetes/argocd/overlays/${{ github.event.inputs.INFRA }}"
-          - "./kubernetes/applications/overlays/${{ github.event.inputs.INFRA }}"
     steps:
       - name: "Checkout"
         uses: actions/checkout@v2
@@ -38,14 +31,6 @@ jobs:
           tar -xzf helm-v${HELM_VERSION}-linux-amd64.tar.gz
           install linux-amd64/helm /usr/local/bin
           helm version
-      - name: install kubeval
-        env:
-          KUBEVAL_VERSION: "0.16.1"
-        run: |
-          wget https://github.com/instrumenta/kubeval/releases/download/v${KUBEVAL_VERSION}/kubeval-linux-amd64.tar.gz
-          tar -xzf kubeval-linux-amd64.tar.gz
-          install kubeval /usr/local/bin
-          kubeval --version
       - name: install kustomize
         env:
           KUSTOMIZE_VERSION: "4.5.6"
@@ -54,15 +39,6 @@ jobs:
           tar -xzf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
           install kustomize /usr/local/bin
           kustomize version
-      - name: "kustomize | kubeval"
-        run: |
-          kustomize build --enable-helm ${{ matrix.overlay }}
-          kustomize build --enable-helm ${{ matrix.overlay }} | kubeval -f - \
-            --ignore-missing-schemas \
-            --kubernetes-version="1.21.5" \
-            --schema-location=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master \
-            --output=tap
-
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -73,4 +49,10 @@ jobs:
 
       - name: "kustomize | apply"
         run: |
-          kustomize build --enable-helm ${{ matrix.overlay }} | kubectl apply -f -
+          kustomize build --enable-helm ./kubernetes/sealed-secrets/overlays/${{ github.event.inputs.INFRA }}  | kubectl delete -f -
+          sleep 20
+          kustomize build --enable-helm ./kubernetes/k8s-secrets/overlays/${{ github.event.inputs.INFRA }} | kubectl delete -f -
+          sleep 4
+          kustomize build --enable-helm ./kubernetes/argocd/overlays/${{ github.event.inputs.INFRA }} | kubectl delete -f -
+          sleep 20
+          kustomize build --enable-helm ./kubernetes/applications/overlays/${{ github.event.inputs.INFRA }} | kubectl delete -f -
