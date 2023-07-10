@@ -49,7 +49,7 @@ jobs:
 
       - name: "kustomize | apply"
         run: |
-          kustomize build --enable-helm ./kubernetes/sealed-secrets/overlays/${{ github.event.inputs.INFRA }}  | kubectl delete -f -
+          # kustomize build --enable-helm ./kubernetes/sealed-secrets/overlays/${{ github.event.inputs.INFRA }}  | kubectl delete -f -
           # sleep 20
           # kustomize build --enable-helm ./kubernetes/k8s-secrets/overlays/${{ github.event.inputs.INFRA }} | kubectl delete -f -
           # sleep 4
